@@ -40,7 +40,7 @@ def k8s_oidc_info():
         provide_context=True,
     )
 
-    run_this = print_pubkey()
+    # run_this = print_pubkey()
 
     # curl_oidc_config = BashOperator(
     #     task_id="curl_oidc_config",
