@@ -1,5 +1,5 @@
 
-# v23
+# v25
 
 from airflow.decorators import dag
 from airflow.operators.bash import BashOperator
@@ -20,7 +20,7 @@ def get_pubkey_f(**kwargs):
     key = jwk.JWK(**key0)
     pubpem = key.export_to_pem().decode("utf-8")[:-1]
 
-    print('''\nVAULT CONFIG CMD:\nvault write auth/jwt/config jwt_validation_pubkeys="%s" \n\n''' % pubpem)
+    # print('''\nVAULT CONFIG CMD:\nvault write auth/jwt/config jwt_validation_pubkeys="%s" \n\n''' % pubpem)
     return pubpem
 
 def print_vault_cmds_f(**kwargs):
@@ -34,7 +34,7 @@ def print_vault_cmds_f(**kwargs):
 vault auth enable jwt
 \nvault write auth/jwt/config jwt_validation_pubkeys="{xcom_pubkey}"
 \nvault write auth/jwt/role/my-role \\
- role_type="jwt" \\
+   role_type="jwt" \\
    bound_audiences="{xcom_audience}" \\
    user_claim="sub" \\
    bound_subject="{xcom_subject}" \\
@@ -45,13 +45,13 @@ vault auth enable jwt
 
 # login command
 vault write auth/jwt/login role=my-role jwt=@token
-\n\n
+\n\n\n
 """
     print(vault_cmds)
 
 
 @dag(start_date=datetime(2022, 8, 1), schedule=None, catchup=False)
-def vault_jwt_info():
+def vault_jwt_auth_setup():
 
     k_get_jwks_uri = BashOperator(
         task_id="k_get_jwks_uri",
@@ -111,4 +111,4 @@ def vault_jwt_info():
     get_jwt_issuer >> print_vault_cmds
     print_vault_cmds >> verify_jwt
 
-vault_jwt_info()
+vault_jwt_auth_setup()
