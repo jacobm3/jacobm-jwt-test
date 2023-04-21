@@ -1,4 +1,4 @@
-# v2
+# v3
 
 import os
 import subprocess
@@ -17,6 +17,7 @@ default_args = {
     'email_on_failure': False,
     'email_on_retry': False,
     'retries': 0,
+    'catchup': False,
     'retry_delay': timedelta(minutes=5)
 }
 
@@ -39,7 +40,7 @@ def get_vault_token():
     
     # Instantiate a HashiCorp Vault client
     # This expects VAULT_ADDR (and VAULT_NAMESPACE, if needed) in the environment
-    vault_client = hvac.Client()
+    vault_client = hvac.Client(namespace=os.getenv('VAULT_NAMESPACE'))
 
     response = vault_client.auth.jwt.jwt_login(role=vault_role, jwt=token, use_token=True, path=vault_auth_path)
     print('Client token returned: %s' % response['auth']['client_token'])
@@ -58,8 +59,8 @@ def get_vault_token():
 
 def retrieve_and_store_db_credentials():
     # Instantiate a HashiCorp Vault client
-    # This expects VAULT_TOKEN and VAULT_ADDR in the environment
-    vault_client = hvac.Client()
+    # This expects VAULT_ADDR in the environment
+    vault_client = hvac.Client(namespace=os.getenv('VAULT_NAMESPACE'))
     
     # Read the database credentials from Vault
     db_creds = vault_client.secrets.database.generate_credentials(mount_point='database', name='db1-5s')
