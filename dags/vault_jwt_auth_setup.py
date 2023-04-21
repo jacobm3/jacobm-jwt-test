@@ -1,5 +1,5 @@
 
-# v25
+# v26
 
 from airflow.decorators import dag
 from airflow.operators.bash import BashOperator
@@ -38,7 +38,7 @@ vault auth enable jwt
    bound_audiences="{xcom_audience}" \\
    user_claim="sub" \\
    bound_subject="{xcom_subject}" \\
-   policies="default" \\
+   policies="default,db-policy" \\
    ttl="1h"    
 
 # END VAULT CONFIG

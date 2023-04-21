@@ -1,4 +1,4 @@
-# v3
+# v7
 
 import os
 import subprocess
@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 
 import hvac
 from airflow import DAG
+from airflow.models import Variable
 from airflow.models.connection import Connection
 from airflow.operators.python_operator import PythonOperator
 
@@ -16,9 +17,9 @@ default_args = {
     'schedule': '@hourly',
     'email_on_failure': False,
     'email_on_retry': False,
-    'retries': 0,
+    'retries': 3,
     'catchup': False,
-    'retry_delay': timedelta(minutes=5)
+    'retry_delay': timedelta(seconds=5)
 }
 
 dag = DAG(
@@ -45,38 +46,32 @@ def get_vault_token():
     response = vault_client.auth.jwt.jwt_login(role=vault_role, jwt=token, use_token=True, path=vault_auth_path)
     print('Client token returned: %s' % response['auth']['client_token'])
 
-    # cmd_str = f"""airflow connections add 'my_prod_db' \
-    #                 --conn-type 'mysql' \
-    #                 --conn-login '{user}' \
-    #                 --conn-password '{passwd}' \
-    #                 --conn-host '{hostname}' \
-    #                 --conn-port '{port}' """
-
-    # print(cmd_str)
-    # subprocess.run(cmd_str, shell=True)
+    x = Variable.set("VAULT_TOKEN", response['auth']['client_token'])
 
     return response['auth']['client_token']
 
 def retrieve_and_store_db_credentials():
     # Instantiate a HashiCorp Vault client
     # This expects VAULT_ADDR in the environment
-    vault_client = hvac.Client(namespace=os.getenv('VAULT_NAMESPACE'))
+    vault_token = Variable.get("VAULT_TOKEN")
+    vault_client = hvac.Client(token=vault_token, namespace=os.getenv('VAULT_NAMESPACE'))
     
     # Read the database credentials from Vault
-    db_creds = vault_client.secrets.database.generate_credentials(mount_point='database', name='db1-5s')
+    db_creds = vault_client.secrets.database.generate_credentials(mount_point='database', name='db1-30s')
     user = db_creds['data']['username']
     passwd = db_creds['data']['password']
     hostname = 'mysql-dev'
     port = 3306
 
-    cmd_str = f"""airflow connections add 'my_prod_db' \
-                    --conn-type 'mysql' \
-                    --conn-login '{user}' \
-                    --conn-password '{passwd}' \
-                    --conn-host '{hostname}' \
-                    --conn-port '{port}' """
+    cmd_str = f"""\nairflow connections add 'my_prod_db' \
+    --conn-type 'mysql' \
+    --conn-login '{user}' \
+    --conn-password '{passwd}' \
+    --conn-host '{hostname}' \
+    --conn-port '{port}' """
 
     print(cmd_str)
+    print(f"\n\nmysql -u{user} -p{passwd} -hjm3.chjklfyz3a8r.us-east-2.rds.amazonaws.com -D db1\n")
     subprocess.run(cmd_str, shell=True)
 
 

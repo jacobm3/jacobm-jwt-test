@@ -91,10 +91,24 @@ vault write database/roles/db1-5s \
     default_ttl="5s" \
     max_ttl="5s"
 
-echo "Writing db1 policy"
+echo "Writing DB1 30s engine role" 
+vault write database/roles/db1-30s \
+    db_name=db1 \
+    creation_statements="CREATE USER '{{name}}'@'%' IDENTIFIED BY '{{password}}';GRANT ALL ON db1.* TO '{{name}}'@'%';" \
+    default_ttl="30s" \
+    max_ttl="30s"
 
-vault policy write db1 -<<EOF
-path "database/creds/db1-5s" {
+echo "Writing DB1 120s engine role" 
+vault write database/roles/db1-120s \
+    db_name=db1 \
+    creation_statements="CREATE USER '{{name}}'@'%' IDENTIFIED BY '{{password}}';GRANT ALL ON db1.* TO '{{name}}'@'%';" \
+    default_ttl="120s" \
+    max_ttl="120s"
+
+echo "Writing db policy"
+
+vault policy write db-policy -<<EOF
+path "database/creds/*" {
   capabilities = ["read"]
 }
 EOF
