@@ -1,4 +1,4 @@
-# v7
+# v8
 
 import os
 import subprocess
@@ -60,7 +60,8 @@ def retrieve_and_store_db_credentials():
     db_creds = vault_client.secrets.database.generate_credentials(mount_point='database', name='db1-30s')
     user = db_creds['data']['username']
     passwd = db_creds['data']['password']
-    hostname = 'mysql-dev'
+    hostname = 'jm3.chjklfyz3a8r.us-east-2.rds.amazonaws.com'
+    dbname = 'db1'
     port = 3306
 
     cmd_str = f"""\nairflow connections add 'my_prod_db' \
@@ -71,7 +72,7 @@ def retrieve_and_store_db_credentials():
     --conn-port '{port}' """
 
     print(cmd_str)
-    print(f"\n\nmysql -u{user} -p{passwd} -hjm3.chjklfyz3a8r.us-east-2.rds.amazonaws.com -D db1\n")
+    print(f"\n\nmysql -u{user} -p{passwd} -h{hostname} -D {dbname}\n")
     subprocess.run(cmd_str, shell=True)
 
 
