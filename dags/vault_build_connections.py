@@ -1,11 +1,13 @@
-from datetime import datetime, timedelta
-from airflow import DAG
-from airflow.operators.python_operator import PythonOperator
-import hvac
-from airflow.models.connection import Connection
-import subprocess
-import os
+# v2
 
+import os
+import subprocess
+from datetime import datetime, timedelta
+
+import hvac
+from airflow import DAG
+from airflow.models.connection import Connection
+from airflow.operators.python_operator import PythonOperator
 
 default_args = {
     'owner': 'airflow',
@@ -82,5 +84,10 @@ with dag:
         task_id='retrieve_db_credentials',
         python_callable=retrieve_and_store_db_credentials
     )
-    
-    retrieve_db_credentials_task
+
+    get_vault_token_task = PythonOperator(
+        task_id='get_vault_token',
+        python_callable=get_vault_token
+    )
+
+    get_vault_token_task >> retrieve_db_credentials_task
